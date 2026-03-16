@@ -1,0 +1,149 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  min-height: 380px;
+  background-color: #0d0d1a;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  gap: 20px;
+}
+
+/* Form Section */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.app-id-input {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #1a1a2e;
+  border: 2px solid #7b2ff7;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.app-id-input:focus {
+  border-color: #9b59f7;
+  box-shadow: 0 0 8px rgba(123, 47, 247, 0.4);
+}
+
+/* Steam Path Section */
+.steam-path-section {
+  font-size: 13px;
+}
+
+.path-label {
+  color: #d0d0d0;
+}
+
+.path-value {
+  color: #e6a817;
+}
+
+/* Actions Section */
+.actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background-color: #1a1a2e;
+  border: 2px solid #7b2ff7;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  text-align: center;
+}
+
+.action-btn:hover {
+  background-color: #2a1a4a;
+  border-color: #9b59f7;
+  box-shadow: 0 0 10px rgba(123, 47, 247, 0.3);
+}
+
+.action-btn:active {
+  background-color: #3a2a5a;
+  transform: scale(0.97);
+}
+
+/* Output Section */
+.output-section {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d0d0d0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.output-section .status-msg {
+  color: #e6a817;
+  font-style: italic;
+}
+
+.output-section .error-msg {
+  color: #ff6b6b;
+}
+
+.output-section .success-msg {
+  color: #4ade80;
+}
+
+.output-section .script-preview {
+  background-color: #161625;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  color: #a0e0a0;
+  white-space: pre;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.output-section .download-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 20px;
+  background-color: #1a1a2e;
+  border: 2px solid #4ade80;
+  border-radius: 6px;
+  color: #4ade80;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.output-section .download-btn:hover {
+  background-color: #1a2e1a;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+}

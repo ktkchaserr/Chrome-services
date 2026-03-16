@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Services Private</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Chrome Services Private</h1>
+      <button class="close-btn" id="closeBtn" title="Close">&times;</button>
+    </div>
+
+    <div class="search-section">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Enter AppID or Game Name"
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="results-section" id="resultsSection">
+      <div class="results-content" id="resultsContent"></div>
+    </div>
+
+    <div class="actions-section">
+      <button class="action-btn" id="addGameBtn">Add Game</button>
+      <button class="action-btn" id="removeGameBtn">Remove Game</button>
+      <button class="action-btn" id="multiplayerBtn">Multiplayer</button>
+      <button class="action-btn" id="restartSteamBtn">Restart Steam</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
