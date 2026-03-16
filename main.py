@@ -4,7 +4,69 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QProgressBar
 )
 from PyQt5.QtGui import QPixmap, QFont, QPalette, QColor, QIcon, QMovie
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QThread, pyqtSignal, QTimer
+
+
+class CoverWorker(QThread):
+    finished = pyqtSignal(bytes)  # image data
+    error = pyqtSignal(str)
+
+    def __init__(self, url):
+        super().__init__()
+        self.url = url
+
+    def run(self):
+        try:
+            r = requests.get(self.url, timeout=10)
+            if r.status_code == 200:
+                self.finished.emit(r.content)
+            else:
+                self.error.emit("Cover not found.")
+        except Exception:
+            self.error.emit("[Error loading image]")
+
+
+class DownloadWorker(QThread):
+    progress = pyqtSignal(int)
+    status = pyqtSignal(str)
+    error = pyqtSignal(str)
+    done = pyqtSignal()
+
+    def __init__(self, url, zip_path, dest_folder):
+        super().__init__()
+        self.url = url
+        self.zip_path = zip_path
+        self.dest_folder = dest_folder
+
+    def run(self):
+        try:
+            r = requests.get(self.url, stream=True, timeout=300)
+            if r.status_code == 200:
+                total = int(r.headers.get('content-length', 0))
+                os.makedirs(self.dest_folder, exist_ok=True)
+
+                with open(self.zip_path, 'wb') as f:
+                    downloaded = 0
+                    for chunk in r.iter_content(8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total:
+                                percent = int(downloaded * 100 / total)
+                                self.progress.emit(percent)
+
+                with zipfile.ZipFile(self.zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(self.dest_folder)
+
+                os.remove(self.zip_path)
+
+                self.status.emit(f"[SUCCESS] Downloaded to {self.dest_folder}")
+            else:
+                self.error.emit(f"[ERROR] Failed to download: {r.status_code}")
+        except Exception as e:
+            self.error.emit(f"[ERROR] {e}")
+        finally:
+            self.done.emit()
 
 class ChromeXRavens(QWidget):
     def __init__(self):
@@ -32,7 +94,11 @@ class ChromeXRavens(QWidget):
 
         self.app_id_input = QLineEdit()
         self.app_id_input.setPlaceholderText("Enter Steam App ID")
-        self.app_id_input.textChanged.connect(self.update_game_cover)
+        self._cover_timer = QTimer()
+        self._cover_timer.setSingleShot(True)
+        self._cover_timer.setInterval(500)
+        self._cover_timer.timeout.connect(self.update_game_cover)
+        self.app_id_input.textChanged.connect(lambda: self._cover_timer.start())
         layout.addWidget(self.app_id_input)
 
         self.cover_label = QLabel("Game Cover Preview")
@@ -134,16 +200,18 @@ class ChromeXRavens(QWidget):
             self.cover_label.setText("Invalid App ID")
             return
         url = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{app_id}/library_600x900.jpg"
-        try:
-            r = requests.get(url)
-            if r.status_code == 200:
-                pix = QPixmap()
-                pix.loadFromData(r.content)
-                self.cover_label.setPixmap(pix.scaledToHeight(200))
-            else:
-                self.cover_label.setText("Cover not found.")
-        except:
-            self.cover_label.setText("[Error loading image]")
+        self._cover_worker = CoverWorker(url)
+        self._cover_worker.finished.connect(self._on_cover_loaded)
+        self._cover_worker.error.connect(self._on_cover_error)
+        self._cover_worker.start()
+
+    def _on_cover_loaded(self, data):
+        pix = QPixmap()
+        pix.loadFromData(data)
+        self.cover_label.setPixmap(pix.scaledToHeight(200))
+
+    def _on_cover_error(self, msg):
+        self.cover_label.setText(msg)
 
     def download_game(self):
         app_id = self.app_id_input.text().strip()
@@ -151,41 +219,19 @@ class ChromeXRavens(QWidget):
             self.status_box.append("[ERROR] Enter a valid App ID.")
             return
 
-        # Example zip download
         url = "https://www.dropbox.com/scl/fi/y26u2itlljofh3oho9n2l/2567870-Chained-together.zip?rlkey=7s0d906a9ffax81ipewvjsepv&st=fp25fh8p&dl=1"
         self.status_box.append(f"[INFO] Downloading game for App ID {app_id}...")
+        self.download_button.setEnabled(False)
 
-        try:
-            r = requests.get(url, stream=True)
-            if r.status_code == 200:
-                total = int(r.headers.get('content-length', 0))
-                zip_path = os.path.join(self.download_folder, f"{app_id}.zip")
-                dest_folder = os.path.join(self.download_folder, app_id)
-                os.makedirs(dest_folder, exist_ok=True)
+        zip_path = os.path.join(self.download_folder, f"{app_id}.zip")
+        dest_folder = os.path.join(self.download_folder, app_id)
 
-                # Download the zip to a temporary file
-                with open(zip_path, 'wb') as f:
-                    downloaded = 0
-                    for chunk in r.iter_content(8192):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            if total:
-                                percent = int(downloaded * 100 / total)
-                                self.progress_bar.setValue(percent)
-
-                # Extract files directly into the destination folder
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(dest_folder)
-
-                # Remove the zip file so only the raw files remain
-                os.remove(zip_path)
-
-                self.status_box.append(f"[SUCCESS] Downloaded to {dest_folder}")
-            else:
-                self.status_box.append(f"[ERROR] Failed to download: {r.status_code}")
-        except Exception as e:
-            self.status_box.append(f"[ERROR] {e}")
+        self._download_worker = DownloadWorker(url, zip_path, dest_folder)
+        self._download_worker.progress.connect(self.progress_bar.setValue)
+        self._download_worker.status.connect(self.status_box.append)
+        self._download_worker.error.connect(self.status_box.append)
+        self._download_worker.done.connect(lambda: self.download_button.setEnabled(True))
+        self._download_worker.start()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
