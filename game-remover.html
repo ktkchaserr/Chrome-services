@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Remover</title>
+  <link rel="stylesheet" href="game-remover.css">
+</head>
+<body>
+  <div class="container">
+    <div class="form-section">
+      <label class="field-label" for="appIdInput">AppID:</label>
+      <input
+        type="text"
+        id="appIdInput"
+        class="app-id-input"
+        placeholder=""
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="steam-path-section">
+      <span class="path-label">Steam Path: </span>
+      <span class="path-value" id="steamPath">C:\Program Files (x86)</span>
+    </div>
+
+    <div class="actions-section">
+      <button class="action-btn" id="steamFolderBtn">Steam Folder</button>
+      <button class="action-btn" id="removeGameBtn">Remove Game</button>
+      <button class="action-btn" id="restartSteamBtn">Restart Steam</button>
+    </div>
+
+    <div class="output-section" id="outputSection"></div>
+  </div>
+
+  <script src="game-remover.js"></script>
+</body>
+</html>
